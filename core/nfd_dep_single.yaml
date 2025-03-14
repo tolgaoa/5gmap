@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfd-service-x
+  namespace: oai
+spec:
+  clusterIP: None
+  ports:
+  - port: 6363
+    targetPort: 6363
+  selector:
+    app: nfd
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ndn-net1
+  namespace: oai
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "mode": "bridge",
+      "master": "ens5",
+      "ipam": {
+        "type": "static",
+        "addresses": [
+          {
+            "address": "5.100.1.100/24",
+            "gateway": "5.100.1.1"
+          }
+        ],
+        "routes": [
+          {
+            "dst": "0.0.0.0/0"
+          }
+        ],
+        "dns": {
+          "nameservers": ["8.8.8.8", "8.8.4.4"]
+        }
+      }
+    }'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nlsr-config-x
+  namespace: oai
+data:
+  NLSR_NETWORK: "/ndn"
+  NLSR_SITE: "/5g/slice1"
+  NLSR_ROUTER: "/%C1.Router/routerX"
+  #NLSR_ADVERTISED_PREFIX: "/ndn/a12xt/slice1/testApp"
+  NLSR_ADVERTISED_PREFIX: '[{"pre": "/ndn/5g"}]'
+  #NLSR_NEIGHBORS: '[{"name": "/ndn/a12xt/slice1/%C1.Router/routerY", "face_uri": "udp://10.0.2.112", "link_cost": 25},
+  #                  {"name": "/ndn/a12xt/slice2/%C1.Router/routerZ", "face_uri": "udp://10.0.2.113", "link_cost": 30}]'
+  NLSR_NEIGHBORS: '[{"name": "/ndn/5g/slice1/%C1.Router/routerY", "face_uri": "udp://5.100.1.101", "link_cost": 25}]'
+  NLSR_NEIGHBOR_IPS: "5.100.1.101"
+  NLSR_CERT_ROOT: "root.cert"
+  NLSR_CERT_SITE: "site.cert"
+  NLSR_CERT_OP: "op.cert"
+  NLSR_CERT_ROUTER: "routerX"
+  PUBLISH_OP_CERT: "true"
+  PUBLISH_SITE_CERT: "true"
+  PUBLISH_ROOT_CERT: "true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfd-deployment-x
+  namespace: oai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfd
+  template:
+    metadata:
+      labels:
+        app: nfd
+      annotations:
+        k8s.v1.cni.cncf.io/networks: ndn-net1
+    spec:
+      containers:
+      - name: nfd
+        image: tolgaomeratalay/nfd-ndn:2.0.18
+        envFrom:
+        - configMapRef:
+            name: nlsr-config-x
+        command: ["/usr/bin/tini", "--"]
+        args: ["bash", "-c", "
+          echo 'Starting NFD'; 
+          /usr/local/bin/nfd-start; 
+          echo 'NFD started'; 
+          
+          echo 'Running Python script to render nlsr.conf'; 
+          python3 /tmp/certificates/render_nlsr.py; 
+          echo 'Python script completed'; 
+          
+          echo 'Creating NFD faces'; 
+          bash /tmp/create_faces.sh; 
+          echo 'Faces created'; 
+           
+          sleep infinity
+        "]
+
+          #echo 'Starting NLSR with trace logging'; 
+          #export NDN_LOG=nlsr.*=TRACE; 
+          #nlsr -f /usr/local/etc/ndn/nlsr.conf; 
+          #echo 'NLSR started'; 
