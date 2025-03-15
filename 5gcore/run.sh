@@ -15,7 +15,7 @@ NORMAL=$(tput sgr0)
 
 
 #gnbsimim dnnim users slices iterationstest thrtesttype(1==hostlvl, 0==podlvl)
-/bin/bash ./deploy.sh zoomv3 zoomv3 1 1 1 1
+/bin/bash ./deploy.sh zoomv3 zoomv3 5 1 1 1
 
 #For now, the number of users, slices and iterationstest is set 1 and the remainder of the use cases is commented out. The user can adjust these values according to their need
 
@@ -24,12 +24,6 @@ NORMAL=$(tput sgr0)
 #/bin/bash ./deploy.sh tiktokv3 tiktokv3 10 8 20 1
 #/bin/bash ./deploy.sh whatsappv3 whatsappv3 10 8 20 1
 #/bin/bash ./deploy.sh fortnitev3 fortnitev3 10 8 20 1
-
-et=`date +%s`
-rt=$((et-st))
-echo $rt
-echo $rt >> itetot.txt
-
 
 echo "-------------------------------------------------"
 echo "Experiment Finished for All Use Cases"
