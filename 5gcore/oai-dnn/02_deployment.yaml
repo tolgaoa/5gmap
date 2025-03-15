@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: oai-dnn10
+  name: oai-dnn14
   labels:
-    app: oai-dnn10
+    app: oai-dnn14
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: oai-dnn10
+      app: oai-dnn14
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: oai-dnn10
+        app: oai-dnn14
       annotations:
         k8s.v1.cni.cncf.io/networks: dnn-net11
     spec:

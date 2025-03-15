@@ -10,7 +10,7 @@ do
 	helm delete amf$c -n oai
 	helm delete smf$c -n oai
 	helm delete upf$c -n oai
-        helm delete gnb$c -n oai
-        kubectl delete deployment -n oai oai-dnn$c
+    helm delete gnb$c -n oai
+    kubectl delete deployment -n oai oai-dnn$c
 done
 

@@ -164,7 +164,7 @@ spec:
         name: configuration
       dnsPolicy: ClusterFirst
       restartPolicy: Always
-      serviceAccountName: {{ .Values.serviceAccount.name }}
+      serviceAccountName: {{ .Values.serviceAccount.saname }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       {{- if .Values.nodeSelector}}
       nodeSelector: 
