@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Chart.Name }}-ndn-configmap
-data:
-  {{- range $key, $val := .Values.ndnproxy }}
-  {{ $key }}: {{ $val | quote }}
-  {{- end }}

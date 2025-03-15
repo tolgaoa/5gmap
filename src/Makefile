@@ -9,7 +9,10 @@ build:
 	go build -o ./bin/proxyapp $(SRC_DIR)/main.go
 
 image:
-	docker build . -t tolgaomeratalay/revprox:v1
+	docker build . -t tolgaomeratalay/revprox:$(VERSION)
+
+push:
+	docker push tolgaomeratalay/revprox:$(VERSION)
 
 run:
 	go run $(SRC_DIR)/main.go

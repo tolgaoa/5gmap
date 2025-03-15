@@ -5,8 +5,8 @@ FROM ubuntu:focal
 RUN apt-get update && \
     apt-get install -y iptables wget curl vim net-tools make
 
-RUN wget https://dl.google.com/go/go1.19.5.linux-amd64.tar.gz
-RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.19.5.linux-amd64.tar.gz
+RUN wget https://dl.google.com/go/go1.23.1.linux-amd64.tar.gz
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.23.1.linux-amd64.tar.gz
 
 ENV PATH="$PATH:/usr/local/go/bin"
 
@@ -16,7 +16,7 @@ RUN ls
 WORKDIR /usr/src/
 RUN make build
 
-RUN adduser proxyop -u 1005 --gecos "proxy op, , , " --disabled-password
+RUN adduser --disabled-password --gecos '' --uid 1005 proxyop
 USER proxyop
 
 ENV PATH="$PATH:/usr/local/go/bin"

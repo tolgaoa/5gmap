@@ -10,77 +10,101 @@ import (
 	"strings"
 	"time"
 
-	"revproxy/pkg/configParser"
-	"revproxy/pkg/tracer"
-
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
+
+	"revproxy/pkg/tracer"
 )
 
-var cfg = configParser.LoadConfig()
-var propagator = propagation.TraceContext{} // OpenTelemetry propagator
+type Proxy struct{}
 
-// ForwardRequest forwards requests while preserving trace context
+const (
+	proxyPort   = 11095
+	servicePort = 8080
+)
+
 func ForwardRequest(req *http.Request) (*http.Response, time.Duration, error) {
-	// Start tracing and update the request context
 	ctx, span, startTime := tracer.StartSpanWithVNFInfo(req.Context(), req)
 	defer span.End()
-	req = req.WithContext(ctx)
 
-	// Construct target URL
+	// Construct destination URL
 	incUrl := fmt.Sprintf("http://%s%s", req.Host, req.RequestURI)
-	intUrl := strings.Replace(incUrl, strconv.Itoa(cfg.ProxyPort), strconv.Itoa(cfg.ServicePort), 1)
+	intUrl := strings.Replace(incUrl, strconv.Itoa(proxyPort), strconv.Itoa(servicePort), 1)
 
-	// Read request body
+	// Read request body safely
 	bodyBytes, err := io.ReadAll(req.Body)
 	if err != nil {
-		log.Printf("Error reading request body: %v", err)
-		span.SetAttributes(attribute.String("error", "Failed to read request body"))
-		span.AddEvent("Request failed", trace.WithAttributes(attribute.String("error", err.Error())))
-		return nil, 0, err
+		span.RecordError(err)
+		return nil, 0, fmt.Errorf("failed to read request body: %w", err)
 	}
-	req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) // Restore request body
+	req.Body.Close()
+	rdr1 := io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-	// Create a new HTTP request
-	proxyReq, err := http.NewRequestWithContext(ctx, req.Method, intUrl, bytes.NewReader(bodyBytes))
+	log.Printf("Incoming URL: %s | Forward URL: %s | Method: %s", incUrl, intUrl, req.Method)
+
+	// Create a new proxied request
+	proxyReq, err := http.NewRequestWithContext(ctx, req.Method, intUrl, rdr1)
 	if err != nil {
-		log.Printf("Error creating proxy request: %v", err)
-		span.SetAttributes(attribute.String("error", "Failed to create proxy request"))
-		span.AddEvent("Proxy request creation failed", trace.WithAttributes(attribute.String("error", err.Error())))
-		return nil, 0, err
+		span.RecordError(err)
+		return nil, 0, fmt.Errorf("failed to create proxy request: %w", err)
 	}
 
-	// Copy headers and inject trace context
-	for name, values := range req.Header {
+	// Forward headers
+	for key, values := range req.Header {
 		for _, value := range values {
-			proxyReq.Header.Add(name, value)
+			proxyReq.Header.Add(key, value)
 		}
 	}
-	propagator.Inject(ctx, propagation.HeaderCarrier(proxyReq.Header)) // Inject trace context
 
-	// Add network slice and location info
-	proxyReq.Header.Set("X-Network-Slice-ID", cfg.NetworkSliceID)
-	proxyReq.Header.Set("X-Location-ID", cfg.LocationID)
+	// Set trace context in headers
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(proxyReq.Header))
 
-	// Capture request duration
+	// Make the request
 	start := time.Now()
-	client := http.Client{}
-	res, err := client.Do(proxyReq)
+	httpClient := http.Client{}
+	res, err := httpClient.Do(proxyReq)
 	duration := time.Since(start)
 
-	if err == nil {
-		// Capture response status & log success
-		span.SetAttributes(
-			attribute.String("http.status_code", fmt.Sprintf("%d", res.StatusCode)),
-			attribute.Float64("http.request.duration_ms", float64(time.Since(startTime).Milliseconds())),
-		)
-		span.AddEvent("Response received")
-	} else {
-		// Log error in span
-		span.SetAttributes(attribute.String("error", "Failed to receive response"))
-		span.AddEvent("Response failed", trace.WithAttributes(attribute.String("error", err.Error())))
+	if err != nil {
+		span.RecordError(err)
+		return nil, 0, fmt.Errorf("failed to forward request: %w", err)
 	}
 
-	return res, duration, err
+	// Total request processing time (including proxy forwarding)
+	totalDuration := time.Since(startTime)
+
+	// Log the duration in OpenTelemetry
+	span.SetAttributes(
+		attribute.Float64("request.forwarding_duration_ms", float64(duration.Milliseconds())),
+		attribute.Float64("request.total_duration_ms", float64(totalDuration.Milliseconds())),
+	)
+
+	return res, duration, nil
+}
+
+func WriteResponse(w http.ResponseWriter, res *http.Response) {
+	// Copy all the header values from the response.
+	for name, values := range res.Header {
+		w.Header()[name] = values
+	}
+
+	// Set a special header to notify that the proxy actually serviced the request.
+	w.Header().Set("Server", "amazing-proxy")
+
+	// Set the status code returned by the destination service.
+	w.WriteHeader(res.StatusCode)
+
+	// Copy the contents from the response body.
+	io.Copy(w, res.Body)
+
+	// Finish the request.
+	res.Body.Close()
+}
+
+func PrintStats(req *http.Request, res *http.Response, duration time.Duration) {
+	fmt.Printf("Request Duration: %v\n", duration)
+	fmt.Printf("Request Size: %d\n", req.ContentLength)
+	fmt.Printf("Response Size: %d\n", res.ContentLength)
+	fmt.Printf("Response Status: %d\n\n", res.StatusCode)
 }

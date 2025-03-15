@@ -12,7 +12,7 @@ type Config struct {
 	ServicePort    int
 	NetworkSliceID string
 	LocationID     string
-	VNFType        string
+	ServiceName    string
 }
 
 // LoadConfig reads environment variables and assigns default values if missing
@@ -22,7 +22,7 @@ func LoadConfig() *Config {
 		ServicePort:    getEnvAsInt("SERVICE_PORT", 8080),
 		NetworkSliceID: getEnv("NETWORK_SLICE_ID", "default-slice"),
 		LocationID:     getEnv("LOCATION_ID", "unknown-location"),
-		VNFType:        getEnv("SERVICENAME", "Unknown-VNF"), // VNF Type from env
+		ServiceName:    getEnv("SERVICENAME", "Unknown-VNF"), // VNF Type from env
 	}
 }
 
