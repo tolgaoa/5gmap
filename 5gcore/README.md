@@ -1,13 +1,6 @@
 # 5G Core Deploymment
 
-**Note**
-See Appendix C for the detailed message flow between components.
-
-See Appendix G for our K8s cluster deployment story on AWS
 **-----------------------**
-
-
-All the OAI 5G core components are v1.5.0 or newer.
 
 ## Deploying the Cluster and Running the Users
 
@@ -23,11 +16,6 @@ $ sudo usermod -aG docker $USER
 ### Step 1: Setting up the K8s Cluster
 
 In this deployment, the K8s cluster is set up using the Ranchers Kubernetes Engine (RKE) which can be installed following this [link](https://rancher.com/docs/rke/latest/en/installation/). Certain RKE versions can only setup certain versions of Kubernetes. We used rke 1.4.3 with Kubernetes 1.24.8.
-
-
-**Warning**
-
-Using Ubuntu 22.04 might cause issues with the SSH server used during the RKE cluster setup process.
 
 
 Once the RKE binary is setup, the [cluster.yaml](cluster.yml) file is used in order to setup the K8s cluster. The given file shows how to configure multiple nodes to be used in the same cluster. In order to adapt the yaml to one's own environment, change the following parameters:
@@ -69,12 +57,10 @@ $ mkdir -p ~/.kube;
 $  kube_config_cluster.yml ~/.kube/config; 
 ```
 
-4. Install Helm on the Bastion node
-```
-$ wget https://get.helm.sh/helm-v3.5.2-linux-amd64.tar.gz;
-tar -zxvf helm-v3.5.2-linux-amd64.tar.gz;
-sudo mv linux-amd64/helm /usr/local/bin/helm;
-```
+4. Install Helm
+
+https://helm.sh/docs/intro/install/
+
 ### Step 2: Deploy the Instrumentation Pipeline
 
 1. Add the required helm repositories to the Bastion node
@@ -88,15 +74,14 @@ helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm
 
 ```
 kubectl create ns jaeger; 
-kubectl create namespace opentelemetry-operator-system; 
-kubectl create ns otel-collector; 
+kubectl create ns otel; 
 kubectl create ns oai
 ```
 
 3. Deploy certificate manager
 
 ```
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.17.0/cert-manager.yaml
 ```
 
 4. Install Jaeger using Helm charts
@@ -106,17 +91,24 @@ helm install jaeger jaegertracing/jaeger -n jaeger
 ```
 This installation can take 4-5 minutes. Some pods may remain in CrashLoopBackOff but after 4-5 restarts all pods should be "Running"
 
-5. Install the OpenTelemetry operator
+5. Install OpenTelemetry
 
 ```
-helm install --namespace opentelemetry-operator-system my-opentelemetry-operator open-telemetry/opentelemetry-operator
-```
-
-6. Install the OpenTelemetry Agents using the provided yaml file
+helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector --version 0.65.0 --values otel.yaml -n test
 
 ```
-kubectl apply -f otelcollector.yaml
+
+6. In case DNS resolution does not work in the cluster, replace the IP of Jaeger Collector in the otel.yaml with the IP of Jaeger Collector pod
+
+
+7. Port Forward for UI access using public IP
+
 ```
+kubectl port-forward -n jaeger service/jaeger-query --address 0.0.0.0 16686:80
+
+```
+
+
 
 ### Step 3: Run the 5G Core
 

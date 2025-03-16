@@ -90,6 +90,7 @@ readinessProbe: true
 
 livenessProbe: false
 
-nodeSelector: {}
+nodeSelector:
+  deplocation: edge
 
 nodeName: 

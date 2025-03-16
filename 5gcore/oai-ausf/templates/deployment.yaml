@@ -16,8 +16,6 @@ spec:
       labels:
         {{- include "oai-ausf.selectorLabels" . | nindent 8 }}
     spec:
-      nodeSelector:
-        type: az
       initContainers:
       - name: init-networking
         image: tolgaomeratalay/init-networking:v5

@@ -15,7 +15,7 @@ NORMAL=$(tput sgr0)
 
 
                         #gnbsimim   dnnim   users   slices iterationstest thrtesttype(1==hostlvl, 0==podlvl)
-/bin/bash ./deploy.sh   zoomv3      zoomv3    5       1           1           0
+/bin/bash ./deploy.sh   zoomv3      zoomv3    3       1           1           0
 
 #For now, the number of users, slices and iterationstest is set 1 and the remainder of the use cases is commented out. The user can adjust these values according to their need
 

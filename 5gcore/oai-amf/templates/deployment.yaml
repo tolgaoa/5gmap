@@ -24,8 +24,6 @@ spec:
           }]
     {{- end }}
     spec:
-      nodeSelector:
-        type: az
       initContainers:
       - name: init-networking
         image: tolgaomeratalay/init-networking:v5

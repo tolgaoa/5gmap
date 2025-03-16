@@ -26,8 +26,8 @@ ausfloc="az"
 amfloc="edge"
 smfloc="edge"
 upfloc="edge"
-dnnloc="az"
-gnbsimloc="edge"
+gnbsimloc="az"
+dnnloc="edge"
 
 # Function to wait for a pod with a specific name prefix to be running
 wait_for_pod() {
@@ -144,7 +144,7 @@ do
 	sed -i "22s/.*/name: oai-nrf$s/" oai-nrf/Chart.yaml
 	sed -i "/saname/c\  saname: \"oai-nrf$s-sa\"" oai-nrf/values.yaml
 	sed -i "/servicename/c\  servicename: \"nrf$st\"" oai-nrf/values.yaml
-	#sed -i "20s/.*/        type: az/" oai-nrf/templates/deployment.yaml
+	sed -i "/deplocation/c\  deplocation: $nrfloc" oai-nrf/values.yaml
 	
 	helm install nrf$s oai-nrf/ -n oai
 	wait_for_pod "oai" "oai-nrf"
@@ -156,7 +156,7 @@ do
 	sed -i "/nrfFqdn/c\  nrfFqdn: \"oai-nrf$s-svc\"" oai-udr/values.yaml
 	sed -i "/saname/c\  saname: \"oai-udr$s-sa\"" oai-udr/values.yaml
 	sed -i "/servicename/c\  servicename: \"udr$st\"" oai-udr/values.yaml
-	#sed -i "20s/.*/        type: az/" oai-udr/templates/deployment.yaml
+	sed -i "/deplocation/c\  deplocation: $udrloc" oai-udr/values.yaml
 	
 	helm install udr$s oai-udr/ -n oai
 	wait_for_pod "oai" "oai-udr"
@@ -169,8 +169,8 @@ do
 	sed -i "/udrFqdn/c\  udrFqdn: \"oai-udr$s-svc\"" oai-udm/values.yaml
 	sed -i "/saname/c\  saname: \"oai-udm$s-sa\"" oai-udm/values.yaml
 	sed -i "/servicename/c\  servicename: \"udm$st\"" oai-udm/values.yaml
-	
-	#sed -i "20s/.*/        type: az/" oai-udm/templates/deployment.yaml
+	sed -i "/deplocation/c\  deplocation: $udmloc" oai-udm/values.yaml
+
 	helm install udm$s oai-udm/ -n oai
 	wait_for_pod "oai" "oai-udm"
 	sleep 2
@@ -182,8 +182,9 @@ do
 	sed -i "/udmFqdn/c\  udmFqdn: \"oai-udm$s-svc\"" oai-ausf/values.yaml
 	sed -i "/saname/c\  saname: \"oai-ausf$s-sa\"" oai-ausf/values.yaml
 	sed -i "/servicename/c\  servicename: \"ausf$st\"" oai-ausf/values.yaml
-	
-	#sed -i "20s/.*/        type: az/" oai-ausf/templates/deployment.yaml
+	sed -i "/deplocation/c\  deplocation: $ausfloc" oai-ausf/values.yaml
+
+
 	helm install ausf$s oai-ausf/ -n oai
 	wait_for_pod "oai" "oai-ausf"
 	sleep 2
@@ -197,8 +198,8 @@ do
 	sed -i "/saname/c\  saname: \"oai-amf$s-sa\"" oai-amf/values.yaml
 	sed -i "/sst0/c\  sst0: \"2$s\"" oai-amf/values.yaml
 	sed -i "/servicename/c\  servicename: \"amf$st\"" oai-amf/values.yaml
+	sed -i "/deplocation/c\  deplocation: $amfloc" oai-amf/values.yaml
 	
-	#sed -i "28s/.*/        type: az/" oai-amf/templates/deployment.yaml
 	helm install amf$s oai-amf/ -n oai
 	wait_for_pod "oai" "oai-amf"
 	sleep 2
@@ -214,8 +215,8 @@ do
 	sed -i "/nssaiSst0/c\  nssaiSst0: \"2$s\"" oai-smf/values.yaml
 	sed -i "/saname/c\  saname: \"oai-smf$s-sa\"" oai-smf/values.yaml
 	sed -i "/servicename/c\  servicename: \"smf$st\"" oai-smf/values.yaml
+	sed -i "/deplocation/c\  deplocation: $smfloc" oai-smf/values.yaml
 	
-	#sed -i "28s/.*/        type: az/" oai-smf/templates/deployment.yaml
 	helm install smf$s oai-smf/ -n oai
 	wait_for_pod "oai" "oai-smf"
 	sleep 2
@@ -228,8 +229,7 @@ do
 	sed -i "/oai-spgwu-tiny-sa/c\  name: \"oai-spgwu-tiny$s-sa\"" oai-spgwu-tiny/values.yaml
 	sed -i "24s/.*/  name: \"oai-spgwu-tiny$s\"/" oai-spgwu-tiny/values.yaml
 	sed -i "/nssaiSst0/c\  nssaiSst0: \"2$s\"" oai-spgwu-tiny/values.yaml
-	
-	#sed -i "27s/.*/        type: az/" oai-spgwu-tiny/templates/deployment.yaml
+	sed -i "/deplocation/c\  deplocation: $upfloc" oai-spgwu-tiny/values.yaml
 	
 	helm install upf$s oai-spgwu-tiny/ -n oai
 	wait_for_pod "oai" "oai-spgwu"
@@ -254,6 +254,8 @@ do
 		sed -i "/msin/c\  msin: \"00000000$u\"" gnbsim/values.yaml
 		sed -i "/key/c\  key: \"0C0A34601D4F07677303652C046253$u\"" gnbsim/values.yaml
 		sed -i "/sst/c\  sst: \"2$s\"" gnbsim/values.yaml
+		sed -i "/deplocation/c\  deplocation: $gnbsimloc" gnbsim/values.yaml
+
 
 		helm install gnb$u gnbsim/ -n oai 
 		sleep 15
@@ -268,8 +270,7 @@ do
 		sed -i "11s/.*/      app: oai-dnn$u/" oai-dnn/02_deployment.yaml
 		sed -i "17s/.*/        app: oai-dnn$u/" oai-dnn/02_deployment.yaml
 		sed -i "28s/.*/        image: tolgaomeratalay\/oai-dnn:${dnnim}/" oai-dnn/02_deployment.yaml
-		
-		#sed -i "22s/.*/        type: az/" oai-dnn/02_deployment.yaml
+		sed -i "22s/.*/        deplocation: $dnnloc/" oai-dnn/02_deployment.yaml
 
 		kubectl apply -k oai-dnn/
 		sleep 5
@@ -278,8 +279,13 @@ do
 		dnneth0=$(kubectl exec -n oai $dnnpod -- ifconfig | grep "inet 10.42" | awk '{print $2}')
 		
 		kubectl exec -it -n oai $dnnpod -- iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+		echo -e "${BLUE} Route 1 ${NC} ${NORMAL}"
 		kubectl exec -it -n oai $dnnpod -- ip route add 12.1.1.0/24 via $upfeth0 dev eth0
+		echo -e "${BLUE} Route 2 ${NC} ${NORMAL}"
 		kubectl exec -it -n oai $gnbsimpod -c gnbsim -- ip route replace $dnneth0 via 0.0.0.0 dev eth0 src 12.1.1.$ip
+		echo -e "${BLUE} Route 3 ${NC} ${NORMAL}"
+
+		
 		((ip+=1))
 		((u+=1))
 		echo "-------------------------------------------------"

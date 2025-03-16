@@ -16,8 +16,6 @@ spec:
       labels:
         {{- include "oai-udr.selectorLabels" . | nindent 8 }}
     spec:
-      nodeSelector:
-        type: az
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       imagePullSecrets:
