@@ -1,4 +1,4 @@
-# MobiCom 2025 - Artifact Submission - 5G-MAP: Demystifying the Performance Implications of Cloud-Based 5G Core Deployments
+# MobiCom 2025 - 5G-MAP: Demystifying the Performance Implications of Cloud-Based 5G Core Deployments
 
 This repository contains the instructions for:
 - deployment of the 5G-MAP integrated OpenAirInterface 5G Core
