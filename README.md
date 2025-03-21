@@ -1,10 +1,8 @@
-# nsdi2024submission
+# MobiCom 2025 - Artifact Submission - 5G-MAP: Demystifying the Performance Implications of Cloud-Based 5G Core Deployments
 
 This repository contains the instructions for:
-- deploying the testbed described in the paper
-- the script for conducting VM-to-VM benchmarks 
-- measurement results
-- the source code of the SCP
+- deployment of the 5G-MAP integrated OpenAirInterface 5G Core
+- the source code of the 5G-MAP Side Car Proxy
 
 **Note**
 - See Appendix D for details on the user traffic patterns
