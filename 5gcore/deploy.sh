@@ -25,6 +25,8 @@ udmloc="az"
 ausfloc="az"
 amfloc="edge"
 smfloc="edge"
+
+#---- DO NOT CHANGE THESE ----
 upfloc="edge"
 gnbsimloc="az"
 dnnloc="edge"
@@ -297,4 +299,4 @@ echo "-------------------------------------------------"
 echo -e "${GREEN} ${bold} Finished 5G Deployment ${NC} ${NORMAL}"
 echo "-------------------------------------------------"
 
-/bin/bash ./start_traffic.sh $3 $4 $dnnim $5 $6
+/bin/bash ./start_traffic.sh $3 $4 $dnnim $5 $6 $7 $8 $9

@@ -20,7 +20,7 @@
 ################################################################################
 
 apiVersion: v2
-name: oai-udm10
+name: oai-udm11
 description: Helm chart for UDM network function
 
 type: application
